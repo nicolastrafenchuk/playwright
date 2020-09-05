@@ -1,6 +1,6 @@
 # Running Playwright in Docker
 
-[Dockerfile.bionic](Dockerfile.bionic) is a playwright-ready image of playwright.
+[Dockerfile.bionic](Dockerfile.bionic) is a playwright-ready image of Playwright.
 This image includes all the dependencies needed to run browsers in a Docker
 container, including browsers.
 
@@ -8,6 +8,8 @@ container, including browsers.
 - [Usage](#usage)
   * [Pull the image](#pull-the-image)
   * [Run the image](#run-the-image)
+    - [Trusted environments](#trusted-environments)
+    - [With the Chromium Sandbox](#with-the-chromium-sandbox)
   * [Using on CI](#using-on-ci)
 - [Image tags](#image-tags)
 - [Development](#development)
@@ -31,8 +33,18 @@ $ docker pull mcr.microsoft.com/playwright:bionic
 
 ### Run the image
 
+By default, the Docker image will use the `root` user to run the browsers. This will disable the Chromium sandbox which is not available with root. If you run trusted code (e.g. End-to-end tests), then the root user is in most cases fine. For web scraping or crawling, we recommend to create a separate user inside the Docker container and use the seccomp profile.
+
+#### Trusted environments
+
 ```
-$ docker container run -it --rm --ipc=host --security-opt seccomp=seccomp_profile.json mcr.microsoft.com/playwright:bionic /bin/bash
+docker run -it --rm mcr.microsoft.com/playwright:bionic /bin/bash
+```
+
+#### With the Chromium Sandbox
+
+```
+$ docker run -it --rm --ipc=host --security-opt seccomp=seccomp_profile.json mcr.microsoft.com/playwright:bionic /bin/bash
 ```
 
 [`seccomp_profile.json`](seccomp_profile.json) is needed to run Chromium with sandbox. This is
@@ -56,6 +68,8 @@ a [default Docker seccomp profile](https://github.com/docker/engine/blob/d0d99b0
 ```
 
 > **NOTE**: Using `--ipc=host` is recommended when using Chrome ([Docker docs](https://docs.docker.com/engine/reference/run/#ipc-settings---ipc)). Chrome can run out of memory without this flag.
+
+Since the seccomp profile is now in use, you have to create a separate user with `adduser pwuser` with which you use to run your browsers with Playwright.
 
 ### Using on CI
 
